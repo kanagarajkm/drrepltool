@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	miniogo "github.com/minio/minio-go/v7"
 )
@@ -242,10 +243,8 @@ func copyObject(ctx context.Context, si objInfo) error {
 	}
 	uoi, err := tgtClient.PutObject(ctx, tgtBucket, oi.Key, obj, oi.Size, miniogo.PutObjectOptions{
 		Internal: miniogo.AdvancedPutOptions{
-			SourceMTime:       oi.LastModified,
-			SourceVersionID:   oi.VersionID,
-			SourceETag:        oi.ETag,
-			ReplicationStatus: miniogo.ReplicationStatusComplete,
+			SourceMTime: oi.LastModified.Add(time.Second * 1),
+			SourceETag:  oi.ETag,
 		},
 		UserMetadata:    oi.UserMetadata,
 		ContentType:     oi.ContentType,
@@ -263,6 +262,9 @@ func copyObject(ctx context.Context, si objInfo) error {
 		return err
 	}
 	logDMsg("Uploaded "+uoi.Key+" successfully", nil)
+	// Delete the existing version on target
+	tgtClient.RemoveObject(ctx, tgtBucket, oi.Key, miniogo.RemoveObjectOptions{VersionID: oi.VersionID})
+	logDMsg("Deleted "+uoi.Key+", "+oi.VersionID+" successfully", nil)
 	return nil
 }
 
