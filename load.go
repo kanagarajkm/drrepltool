@@ -240,12 +240,18 @@ func copyObject(ctx context.Context, si objInfo) error {
 	if !ok {
 		enc = oi.Metadata[strings.ToLower(ContentEncoding)]
 	}
+	// if the source object is REPLICA
+	// we will set COMPLETED on target
+	var repStatus = "REPLICA"
+	if oi.ReplicationStatus == "REPLICA" {
+		repStatus = "COMPLETED"
+	}
 	uoi, err := tgtClient.PutObject(ctx, tgtBucket, oi.Key, obj, oi.Size, miniogo.PutObjectOptions{
 		Internal: miniogo.AdvancedPutOptions{
 			SourceMTime:       oi.LastModified,
 			SourceVersionID:   oi.VersionID,
 			SourceETag:        oi.ETag,
-			ReplicationStatus: miniogo.ReplicationStatusComplete,
+			ReplicationStatus: miniogo.ReplicationStatus(repStatus),
 		},
 		UserMetadata:    oi.UserMetadata,
 		ContentType:     oi.ContentType,
