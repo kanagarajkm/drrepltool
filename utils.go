@@ -21,7 +21,7 @@ const (
 )
 
 func logMsg(msg string) {
-	if logFlag {
+	if true {
 		fmt.Println(msg)
 	}
 }

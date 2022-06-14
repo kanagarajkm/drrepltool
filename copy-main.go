@@ -121,9 +121,9 @@ func checkCopyArgsAndInit(ctx *cli.Context) {
 		log.Fatalln("--secret-key is not provided for target")
 	}
 
-	if tgtBucket == "" {
-		log.Fatalln("--bucket not specified for target.")
-	}
+	// if tgtBucket == "" {
+	// 	log.Fatalln("--bucket not specified for target.")
+	// }
 
 	if srcEndpoint == "" {
 		log.Fatalln("--src-endpoint is not provided")
@@ -137,9 +137,9 @@ func checkCopyArgsAndInit(ctx *cli.Context) {
 		log.Fatalln("--src-secret-key is not provided")
 	}
 
-	if srcBucket == "" {
-		log.Fatalln("--src-bucket not specified.")
-	}
+	// if srcBucket == "" {
+	// 	log.Fatalln("--src-bucket not specified.")
+	// }
 	if dirPath == "" {
 		console.Fatalln(fmt.Errorf("path to working dir required, please set --data-dir flag"))
 		return
@@ -152,7 +152,7 @@ func initMinioClient(ctx *cli.Context, accessKey, secretKey, minioBucket, urlStr
 		return nil, fmt.Errorf("unable to parse input arg %s: %v", urlStr, err)
 	}
 
-	if accessKey == "" || secretKey == "" || minioBucket == "" {
+	if accessKey == "" || secretKey == "" {
 		return nil, fmt.Errorf("one or more of AccessKey:%s SecretKey: %s Bucket:%s are missing in MinIO configuration for: %s", accessKey, secretKey, minioBucket, urlStr)
 	}
 	options := miniogo.Options{

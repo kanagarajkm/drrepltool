@@ -202,12 +202,12 @@ func copyObject(ctx context.Context, si objInfo) error {
 	if err != nil {
 		return err
 	}
-
 	oi, err := obj.Stat()
 	if err != nil {
 		if !(isMethodNotAllowedErr(err) && si.deleteMarker) {
 			return err
 		}
+		return err
 	}
 	defer obj.Close()
 	if dryRun {
@@ -216,11 +216,11 @@ func copyObject(ctx context.Context, si objInfo) error {
 	}
 
 	if si.deleteMarker {
-		_, err = tgtClient.StatObject(ctx, tgtBucket, si.object, miniogo.StatObjectOptions{
+		_, err = tgtClient.StatObject(ctx, si.bucket, si.object, miniogo.StatObjectOptions{
 			VersionID: si.versionID,
 		})
 		if err.Error() == errObjectNotFound.Error() {
-			return tgtClient.RemoveObject(ctx, tgtBucket, si.object, miniogo.RemoveObjectOptions{
+			return tgtClient.RemoveObject(ctx, si.bucket, si.object, miniogo.RemoveObjectOptions{
 				VersionID: si.versionID,
 				Internal: miniogo.AdvancedRemoveOptions{
 					ReplicationDeleteMarker: si.deleteMarker,
@@ -241,7 +241,7 @@ func copyObject(ctx context.Context, si objInfo) error {
 	if !ok {
 		enc = oi.Metadata[strings.ToLower(ContentEncoding)]
 	}
-	uoi, err := tgtClient.PutObject(ctx, tgtBucket, oi.Key, obj, oi.Size, miniogo.PutObjectOptions{
+	uoi, err := tgtClient.PutObject(ctx, si.bucket, oi.Key, obj, oi.Size, miniogo.PutObjectOptions{
 		Internal: miniogo.AdvancedPutOptions{
 			SourceMTime: oi.LastModified.Add(time.Second * 1),
 			SourceETag:  oi.ETag,
@@ -263,7 +263,7 @@ func copyObject(ctx context.Context, si objInfo) error {
 	}
 	logDMsg("Uploaded "+uoi.Key+" successfully", nil)
 	// Delete the existing version on target
-	tgtClient.RemoveObject(ctx, tgtBucket, oi.Key, miniogo.RemoveObjectOptions{VersionID: oi.VersionID})
+	tgtClient.RemoveObject(ctx, si.bucket, oi.Key, miniogo.RemoveObjectOptions{VersionID: oi.VersionID})
 	logDMsg("Deleted "+uoi.Key+", "+oi.VersionID+" successfully", nil)
 	return nil
 }
